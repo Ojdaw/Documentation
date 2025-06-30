@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Documentation</title>
+<style>
+  body {
+    display: flex;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    height: 100vh;
+  }
+  nav {
+    width: 280px;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    background: #f9f9f9;
+  }
+  #search {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  .folder {
+    margin-bottom: 1em;
+  }
+  .folder > h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1em;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+  }
+  button.file-btn {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  button.file-btn:hover {
+    background: #ddd;
+  }
+  .file-icon {
+    font-size: 20px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  main {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+  main pre {
+    background: #eee;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <input type="search" id="search" placeholder="Search files..." />
+  <div id="file-list">
+    <!-- Folders and file buttons will go here -->
+  </div>
+</nav>
+
+<main id="content">
+  <h2>Documentation - Ojdaw</h2>
+</main>
+
+<!-- Marked.js for Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+  const content = document.getElementById('content');
+  const fileList = document.getElementById('file-list');
+  const searchInput = document.getElementById('search');
+
+  let filesData = []; // will hold JSON data
+
+  function loadReadme(path) {
+    fetch(path)
+      .then(res => {
+        if (!res.ok) throw new Error('File not found');
+        return res.text();
+      })
+      .then(md => {
+        content.innerHTML = marked.parse(md);
+      })
+      .catch(e => {
+        content.innerHTML = `<p style="color:red;">Error loading file: ${e.message}</p>`;
+      });
+  }
+
+  // Render files grouped by folder, filtered by search query
+  function renderFileList(query = '') {
+    fileList.innerHTML = '';
+    const grouped = {};
+
+    // Group files by folder
+    filesData.forEach(file => {
+      if (!file.folder) file.folder = "Others";
+      if (!grouped[file.folder]) grouped[file.folder] = [];
+      grouped[file.folder].push(file);
+    });
+
+    // Sort folders alphabetically
+    const sortedFolders = Object.keys(grouped).sort();
+
+    sortedFolders.forEach(folder => {
+      // Folder container
+      const folderDiv = document.createElement('div');
+      folderDiv.className = 'folder';
+
+      // Folder title
+      const folderTitle = document.createElement('h3');
+      folderTitle.textContent = folder;
+      folderDiv.appendChild(folderTitle);
+
+      // Files in folder, filtered by search
+      grouped[folder]
+        .filter(file => file.name.toLowerCase().includes(query.toLowerCase()))
+        .forEach(file => {
+          const btn = document.createElement('button');
+          btn.className = 'file-btn';
+
+          // Icon with color
+          const iconSpan = document.createElement('span');
+          iconSpan.className = 'file-icon';
+          iconSpan.textContent = file.icon || '📄';
+          iconSpan.style.color = file.color || '#000';
+          btn.appendChild(iconSpan);
+
+          // Name text
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = file.name;
+          btn.appendChild(nameSpan);
+
+          btn.addEventListener('click', () => loadReadme(file.path));
+          folderDiv.appendChild(btn);
+        });
+
+      fileList.appendChild(folderDiv);
+    });
+  }
+
+  // Fetch JSON data and initialize UI
+  fetch('files.json')
+    .then(res => {
+      if (!res.ok) throw new Error('Could not load files.json');
+      return res.json();
+    })
+    .then(data => {
+      filesData = data;
+      renderFileList();
+    })
+    .catch(e => {
+      fileList.innerHTML = `<p style="color:red;">Error loading files list: ${e.message}</p>`;
+    });
+
+  // Filter list on search input
+  searchInput.addEventListener('input', e => {
+    renderFileList(e.target.value);
+  });
+</script>
+
+</body>
+</html>
