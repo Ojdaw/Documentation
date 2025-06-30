@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Project Overview",
+    "path": "readmes/overview/README.md",
+    "icon": "📄",
+    "color": "#1f77b4",
+    "folder": "Overview"
+  },
+  {
+    "name": "Installation Guide",
+    "path": "readmes/installation/README.md",
+    "icon": "⚙️",
+    "color": "#ff7f0e",
+    "folder": "Setup"
+  },
+  {
+    "name": "Usage Instructions",
+    "path": "readmes/usage/README.md",
+    "icon": "🚀",
+    "color": "#2ca02c",
+    "folder": "Usage"
+  }
+]
