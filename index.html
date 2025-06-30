@@ -89,7 +89,7 @@
   const fileList = document.getElementById('file-list');
   const searchInput = document.getElementById('search');
 
-  let filesData = []; // will hold JSON data
+  let filesData = [];
 
   function loadReadme(path) {
     fetch(path)
@@ -105,46 +105,64 @@
       });
   }
 
-  // Render files grouped by folder, filtered by search query
   function renderFileList(query = '') {
     fileList.innerHTML = '';
     const grouped = {};
+    const rootFiles = [];
 
-    // Group files by folder
     filesData.forEach(file => {
-      if (!file.folder) file.folder = "Others";
-      if (!grouped[file.folder]) grouped[file.folder] = [];
-      grouped[file.folder].push(file);
+      if (!file.folder) {
+        rootFiles.push(file);
+      } else {
+        if (!grouped[file.folder]) grouped[file.folder] = [];
+        grouped[file.folder].push(file);
+      }
     });
 
-    // Sort folders alphabetically
+    // First render root files
+    rootFiles
+      .filter(file => file.name.toLowerCase().includes(query.toLowerCase()))
+      .forEach(file => {
+        const btn = document.createElement('button');
+        btn.className = 'file-btn';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'file-icon';
+        iconSpan.textContent = file.icon || '📄';
+        iconSpan.style.color = file.color || '#000';
+        btn.appendChild(iconSpan);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = file.name;
+        btn.appendChild(nameSpan);
+
+        btn.addEventListener('click', () => loadReadme(file.path));
+        fileList.appendChild(btn);
+      });
+
+    // Then render folders
     const sortedFolders = Object.keys(grouped).sort();
 
     sortedFolders.forEach(folder => {
-      // Folder container
       const folderDiv = document.createElement('div');
       folderDiv.className = 'folder';
 
-      // Folder title
       const folderTitle = document.createElement('h3');
       folderTitle.textContent = folder;
       folderDiv.appendChild(folderTitle);
 
-      // Files in folder, filtered by search
       grouped[folder]
         .filter(file => file.name.toLowerCase().includes(query.toLowerCase()))
         .forEach(file => {
           const btn = document.createElement('button');
           btn.className = 'file-btn';
 
-          // Icon with color
           const iconSpan = document.createElement('span');
           iconSpan.className = 'file-icon';
           iconSpan.textContent = file.icon || '📄';
           iconSpan.style.color = file.color || '#000';
           btn.appendChild(iconSpan);
 
-          // Name text
           const nameSpan = document.createElement('span');
           nameSpan.textContent = file.name;
           btn.appendChild(nameSpan);
@@ -157,7 +175,6 @@
     });
   }
 
-  // Fetch JSON data and initialize UI
   fetch('files.json')
     .then(res => {
       if (!res.ok) throw new Error('Could not load files.json');
@@ -171,7 +188,6 @@
       fileList.innerHTML = `<p style="color:red;">Error loading files list: ${e.message}</p>`;
     });
 
-  // Filter list on search input
   searchInput.addEventListener('input', e => {
     renderFileList(e.target.value);
   });
