@@ -85,112 +85,137 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
-  const content = document.getElementById('content');
-  const fileList = document.getElementById('file-list');
-  const searchInput = document.getElementById('search');
+const content = document.getElementById('content');
+const fileList = document.getElementById('file-list');
+const searchInput = document.getElementById('search');
 
-  let filesData = [];
+let filesData = [];
+const readmeCache = new Map(); // Cache for preloaded markdown text
 
-  function loadReadme(path) {
+// Preload all README files at once, cache results
+async function preloadAllReadmes() {
+  const promises = filesData.map(file =>
+    fetch(file.path)
+      .then(res => {
+        if (!res.ok) throw new Error(`File not found: ${file.path}`);
+        return res.text();
+      })
+      .then(text => {
+        readmeCache.set(file.path, text);
+      })
+      .catch(e => {
+        // Cache error message as well
+        readmeCache.set(file.path, `<p style="color:red;">Error loading file: ${e.message}</p>`);
+      })
+  );
+  await Promise.all(promises);
+}
+
+// Load from cache or fetch on demand if missing (fallback)
+function loadReadme(path) {
+  if (readmeCache.has(path)) {
+    content.innerHTML = marked.parse(readmeCache.get(path));
+  } else {
     fetch(path)
       .then(res => {
         if (!res.ok) throw new Error('File not found');
         return res.text();
       })
       .then(md => {
+        readmeCache.set(path, md);
         content.innerHTML = marked.parse(md);
       })
       .catch(e => {
         content.innerHTML = `<p style="color:red;">Error loading file: ${e.message}</p>`;
       });
   }
+}
 
-  function renderFileList(query = '') {
-    fileList.innerHTML = '';
-    const grouped = {};
-    const rootFiles = [];
+function renderFileList(query = '') {
+  fileList.innerHTML = '';
 
-    filesData.forEach(file => {
-      if (!file.folder) {
-        rootFiles.push(file);
-      } else {
-        if (!grouped[file.folder]) grouped[file.folder] = [];
-        grouped[file.folder].push(file);
-      }
-    });
+  const grouped = {};
+  const rootFiles = [];
 
-    // First render root files
-    rootFiles
-      .filter(file => file.name.toLowerCase().includes(query.toLowerCase()))
-      .forEach(file => {
-        const btn = document.createElement('button');
-        btn.className = 'file-btn';
+  filesData.forEach(file => {
+    const matches = file.name.toLowerCase().includes(query.toLowerCase());
+    const hasFolder = file.folder && file.folder.trim() !== '';
 
-        const iconSpan = document.createElement('span');
-        iconSpan.className = 'file-icon';
-        iconSpan.textContent = file.icon || '📄';
-        iconSpan.style.color = file.color || '#000';
-        btn.appendChild(iconSpan);
+    if (!matches) return;
 
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = file.name;
-        btn.appendChild(nameSpan);
-
-        btn.addEventListener('click', () => loadReadme(file.path));
-        fileList.appendChild(btn);
-      });
-
-    // Then render folders
-    const sortedFolders = Object.keys(grouped).sort();
-
-    sortedFolders.forEach(folder => {
-      const folderDiv = document.createElement('div');
-      folderDiv.className = 'folder';
-
-      const folderTitle = document.createElement('h3');
-      folderTitle.textContent = folder;
-      folderDiv.appendChild(folderTitle);
-
-      grouped[folder]
-        .filter(file => file.name.toLowerCase().includes(query.toLowerCase()))
-        .forEach(file => {
-          const btn = document.createElement('button');
-          btn.className = 'file-btn';
-
-          const iconSpan = document.createElement('span');
-          iconSpan.className = 'file-icon';
-          iconSpan.textContent = file.icon || '📄';
-          iconSpan.style.color = file.color || '#000';
-          btn.appendChild(iconSpan);
-
-          const nameSpan = document.createElement('span');
-          nameSpan.textContent = file.name;
-          btn.appendChild(nameSpan);
-
-          btn.addEventListener('click', () => loadReadme(file.path));
-          folderDiv.appendChild(btn);
-        });
-
-      fileList.appendChild(folderDiv);
-    });
-  }
-
-  fetch('files.json')
-    .then(res => {
-      if (!res.ok) throw new Error('Could not load files.json');
-      return res.json();
-    })
-    .then(data => {
-      filesData = data;
-      renderFileList();
-    })
-    .catch(e => {
-      fileList.innerHTML = `<p style="color:red;">Error loading files list: ${e.message}</p>`;
-    });
-
-  searchInput.addEventListener('input', e => {
-    renderFileList(e.target.value);
+    if (hasFolder) {
+      if (!grouped[file.folder]) grouped[file.folder] = [];
+      grouped[file.folder].push(file);
+    } else {
+      rootFiles.push(file);
+    }
   });
+
+  // Render root files (no folder)
+  rootFiles.forEach(file => {
+    const btn = createFileButton(file);
+    fileList.appendChild(btn);
+  });
+
+  // Render folders
+  Object.keys(grouped).sort().forEach(folder => {
+    const filesInFolder = grouped[folder];
+    if (!filesInFolder.length) return;
+
+    const folderDiv = document.createElement('div');
+    folderDiv.className = 'folder';
+
+    const folderTitle = document.createElement('h3');
+    folderTitle.textContent = folder;
+    folderDiv.appendChild(folderTitle);
+
+    filesInFolder.forEach(file => {
+      const btn = createFileButton(file);
+      folderDiv.appendChild(btn);
+    });
+
+    fileList.appendChild(folderDiv);
+  });
+}
+
+function createFileButton(file) {
+  const btn = document.createElement('button');
+  btn.className = 'file-btn';
+
+  const icon = document.createElement('span');
+  icon.className = 'file-icon';
+  icon.textContent = file.icon || '📄';
+  icon.style.color = file.color || '#000';
+
+  const name = document.createElement('span');
+  name.textContent = file.name;
+
+  btn.appendChild(icon);
+  btn.appendChild(name);
+
+  btn.addEventListener('click', () => loadReadme(file.path));
+  return btn;
+}
+
+// Load files.json and preload all readmes on page load
+fetch('files.json')
+  .then(res => {
+    if (!res.ok) throw new Error('Could not load files.json');
+    return res.json();
+  })
+  .then(async data => {
+    filesData = data;
+    renderFileList();
+    await preloadAllReadmes();
+  })
+  .catch(e => {
+    fileList.innerHTML = `<p style="color:red;">Error loading files list: ${e.message}</p>`;
+  });
+
+searchInput.addEventListener('input', e => {
+  renderFileList(e.target.value);
+});
+
 </script>
 
 </body>
