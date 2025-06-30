@@ -103,10 +103,7 @@ async function preloadAllReadmes() {
       .then(text => {
         readmeCache.set(file.path, text);
       })
-      .catch(e => {
-        // Cache error message as well
-        readmeCache.set(file.path, `<p style="color:red;">Error loading file: ${e.message}</p>`);
-      })
+      // catch removed
   );
   await Promise.all(promises);
 }
@@ -124,10 +121,8 @@ function loadReadme(path) {
       .then(md => {
         readmeCache.set(path, md);
         content.innerHTML = marked.parse(md);
-      })
-      .catch(e => {
-        content.innerHTML = `<p style="color:red;">Error loading file: ${e.message}</p>`;
       });
+      // catch removed
   }
 }
 
@@ -207,10 +202,8 @@ fetch('files.json')
     filesData = data;
     renderFileList();
     await preloadAllReadmes();
-  })
-  .catch(e => {
-    fileList.innerHTML = `<p style="color:red;">Error loading files list: ${e.message}</p>`;
   });
+// catch removed
 
 searchInput.addEventListener('input', e => {
   renderFileList(e.target.value);
