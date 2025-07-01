@@ -153,7 +153,7 @@
         color: var(--text-color);
     }
 
-    /* Initial state for content area */
+    /* Initial state for content area - This will now be superseded by markdown content */
     #content.initial-state {
         display: flex;
         flex-direction: column;
@@ -162,6 +162,7 @@
         text-align: center;
         height: 100%;
         color: #666;
+        /* Will be removed when a markdown file is loaded */
     }
     #content.initial-state h2 {
         color: #999;
@@ -188,9 +189,7 @@
 </nav>
 
 <main id="content" class="initial-state">
-    <h2>Welcome to Ojdaw Documentation</h2>
-    <p>Select a file from the left sidebar to view its content, or use the search bar to find specific documentation.</p>
-</main>
+    </main>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -203,6 +202,9 @@ const homeBtn = document.getElementById('home-btn');
 let filesData = [];
 const readmeCache = new Map(); // Cache for preloaded markdown text
 let currentActiveFile = null; // To track the currently active file button
+
+// Define the path to your main README.md file
+const homeReadmePath = 'README.md'; // Assumes README.md is in the root directory
 
 // Function to set the active state on file buttons
 function setActiveFileButton(filePath) {
@@ -220,26 +222,17 @@ function setActiveFileButton(filePath) {
         }
     });
 
-    // Handle home button active state
-    if (filePath === 'home') {
+    // Handle home button active state based on the loaded path
+    if (filePath === homeReadmePath) {
         homeBtn.classList.add('active');
     } else {
         homeBtn.classList.remove('active');
     }
 }
 
-// Function to handle showing the home content
+// Function to handle showing the home content (now loads the README.md)
 function showHomeContent() {
-    content.innerHTML = `
-        <h2>Welcome to Ojdaw Documentation</h2>
-        <p>Select a file from the left sidebar to view its content, or use the search bar to find specific documentation.</p>
-    `;
-    content.classList.add('initial-state');
-    setActiveFileButton('home');
-    // Update URL to reflect home state without a 'path' parameter
-    const url = new URL(window.location.href);
-    url.searchParams.delete('path');
-    window.history.pushState({}, '', url);
+    loadReadme(homeReadmePath, true); // Load the defined home README, and update URL
 }
 
 
@@ -256,11 +249,10 @@ async function preloadAllReadmes() {
             })
             .catch(error => {
                 console.error(`Error preloading ${file.path}:`, error);
-                // Optionally store an error message in cache if preloading failed
                 readmeCache.set(file.path, `Error: Could not load ${file.name}.`);
             })
     );
-    await Promise.allSettled(promises); // Use allSettled to wait for all promises, even if some fail
+    await Promise.allSettled(promises);
 }
 
 // Load from cache or fetch on demand if missing (fallback)
@@ -317,7 +309,7 @@ function renderFileList(query = '') {
 
     filesData.forEach(file => {
         const matches = file.name.toLowerCase().includes(query.toLowerCase()) ||
-                        (file.folder && file.folder.toLowerCase().includes(query.toLowerCase())); // Search in folder names too!
+                        (file.folder && file.folder.toLowerCase().includes(query.toLowerCase()));
         
         if (!matches) return;
 
@@ -349,7 +341,7 @@ function renderFileList(query = '') {
         folderTitle.textContent = folder;
         folderDiv.appendChild(folderTitle);
 
-        filesInFolder.sort((a, b) => a.name.localeCompare(b.name)).forEach(file => { // Sort files within folders
+        filesInFolder.sort((a, b) => a.name.localeCompare(b.name)).forEach(file => {
             const btn = createFileButton(file);
             folderDiv.appendChild(btn);
         });
@@ -360,10 +352,10 @@ function renderFileList(query = '') {
     // After rendering, ensure the currently loaded file button is active
     const urlParams = new URLSearchParams(window.location.search);
     const pathFromUrl = urlParams.get('path');
-    if (pathFromUrl && readmeCache.has(pathFromUrl)) {
+    if (pathFromUrl) {
         setActiveFileButton(pathFromUrl);
-    } else if (!pathFromUrl) {
-        setActiveFileButton('home');
+    } else { // If no path in URL, the home readme should be active
+        setActiveFileButton(homeReadmePath);
     }
 }
 
@@ -375,7 +367,7 @@ function createFileButton(file) {
     const icon = document.createElement('span');
     icon.className = 'file-icon';
     icon.textContent = file.icon || '📄';
-    icon.style.color = file.color || '#007bff'; // Default icon color
+    icon.style.color = file.color || '#007bff';
 
     const name = document.createElement('span');
     name.textContent = file.name;
@@ -398,8 +390,17 @@ fetch('files.json')
     })
     .then(async data => {
         filesData = data;
-        renderFileList();
-        await preloadAllReadmes();
+        renderFileList(); // Render the file list initially
+
+        // Now find and ensure our home README path exists in filesData
+        const homeReadmeExists = filesData.some(file => file.path === homeReadmePath);
+        if (!homeReadmeExists) {
+            // If it doesn't exist, we might want to add a fallback or an error
+            console.warn(`Warning: The specified home README path '${homeReadmePath}' is not found in files.json.`);
+            // You could optionally add it here dynamically if desired, or show a different message
+        }
+
+        await preloadAllReadmes(); // Preload all listed readmes
 
         // Check for ?path= parameter on initial load
         const urlParams = new URLSearchParams(window.location.search);
@@ -427,7 +428,7 @@ window.addEventListener('popstate', () => {
     if (pathFromUrl) {
         loadReadme(pathFromUrl, false); // Load, but don't push new state
     } else {
-        showHomeContent();
+        showHomeContent(); // If path is cleared, go to home
     }
 });
 </script>
