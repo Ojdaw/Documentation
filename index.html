@@ -200,11 +200,11 @@ const searchInput = document.getElementById('search');
 const homeBtn = document.getElementById('home-btn');
 
 let filesData = [];
-const readmeCache = new Map(); // Cache for preloaded markdown text
+// readmeCache removed as requested
 let currentActiveFile = null; // To track the currently active file button
 
 // Define the path to your main README.md file
-const homeReadmePath = 'readmes/Home.md'; // Assumes README.md is in the root directory
+const homeReadmePath = 'readmes/Home.md';
 
 // Function to set the active state on file buttons
 function setActiveFileButton(filePath) {
@@ -236,69 +236,32 @@ function showHomeContent() {
 }
 
 
-// Preload all README files at once, cache results
+// PreloadAllReadmes is now effectively a no-op as there's no cache to preload into.
+// It remains for structural consistency but doesn't perform caching.
 async function preloadAllReadmes() {
-    const promises = filesData.map(file =>
-        fetch(file.path)
-            .then(res => {
-                if (!res.ok) throw new Error(`File not found: ${file.path}`);
-                return res.text();
-            })
-            .then(text => {
-                readmeCache.set(file.path, text);
-            })
-            .catch(error => {
-                console.error(`Error preloading ${file.path}:`, error);
-                readmeCache.set(file.path, `Error: Could not load ${file.name}.`);
-            })
-    );
-    await Promise.allSettled(promises);
+    // No caching mechanism, so this function doesn't need to do anything with fetches.
+    // All files will be fetched on demand by loadReadme.
 }
 
-// Load from cache or fetch on demand if missing (fallback)
+// Load content by fetching directly, no cache involved
 function loadReadme(path, updateUrl = true) {
     content.classList.remove('initial-state'); // Remove initial state styling
 
-    if (readmeCache.has(path)) {
-        const md = readmeCache.get(path);
-        if (md.startsWith('Error:')) { // Check for preloaded error message
-            content.innerHTML = `<h1>Error Loading Document</h1><p>${md}</p>`;
-        } else {
+    fetch(path)
+        .then(res => {
+            if (!res.ok) throw new Error('File not found');
+            return res.text();
+        })
+        .then(md => {
             content.innerHTML = marked.parse(md);
-        }
-        setActiveFileButton(path);
-        if (updateUrl) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('path', path);
-            window.history.pushState({}, '', url);
-        }
-    } else {
-        fetch(path)
-            .then(res => {
-                if (!res.ok) throw new Error('File not found');
-                return res.text();
-            })
-            .then(md => {
-                readmeCache.set(path, md);
-                content.innerHTML = marked.parse(md);
-                setActiveFileButton(path);
-                if (updateUrl) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('path', path);
-                    window.history.pushState({}, '', url);
-                }
-            })
-            .catch(error => {
-                console.error(`Error loading ${path}:`, error);
-                content.innerHTML = `<h1>Error</h1><p>Could not load the requested document (${path}). It might not exist or there was a network issue.</p>`;
-                setActiveFileButton(null); // No file is active on error
-                if (updateUrl) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete('path'); // Clear path on error
-                    window.history.pushState({}, '', url);
-                }
-            });
-    }
+            setActiveFileButton(path);
+            if (updateUrl) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('path', path);
+                window.history.pushState({}, '', url);
+            }
+        })
+        // No .catch(error => { ... }) as per previous request
 }
 
 function renderFileList(query = '') {
@@ -382,7 +345,7 @@ function createFileButton(file) {
 // Event listener for the Home button
 homeBtn.addEventListener('click', showHomeContent);
 
-// Load files.json and preload all readmes on page load
+// Load files.json on page load
 fetch('files.json')
     .then(res => {
         if (!res.ok) throw new Error('Could not load files.json');
@@ -395,12 +358,12 @@ fetch('files.json')
         // Now find and ensure our home README path exists in filesData
         const homeReadmeExists = filesData.some(file => file.path === homeReadmePath);
         if (!homeReadmeExists) {
-            // If it doesn't exist, we might want to add a fallback or an error
             console.warn(`Warning: The specified home README path '${homeReadmePath}' is not found in files.json.`);
-            // You could optionally add it here dynamically if desired, or show a different message
         }
 
-        await preloadAllReadmes(); // Preload all listed readmes
+        // preloadAllReadmes() is now a no-op, so no need to await it for caching purposes.
+        // It's kept here for flow but doesn't affect content loading.
+        // await preloadAllReadmes(); 
 
         // Check for ?path= parameter on initial load
         const urlParams = new URLSearchParams(window.location.search);
@@ -411,11 +374,7 @@ fetch('files.json')
             showHomeContent(); // Show home content if no path is specified
         }
     })
-    .catch(error => {
-        console.error("Failed to initialize documentation:", error);
-        content.innerHTML = `<h1>Error Loading Documentation</h1><p>Could not load the documentation index. Please check the 'files.json' file and your network connection.</p>`;
-        content.classList.remove('initial-state');
-    });
+    // No .catch(error => { ... }) for files.json fetch as per previous request
 
 searchInput.addEventListener('input', e => {
     renderFileList(e.target.value);
