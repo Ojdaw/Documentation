@@ -1,11 +1,5 @@
 [
   {
-    "name": "Home",
-    "path": "readmes/Home.md",
-    "icon": "🏠",
-    "color": "#1f77b4"
-  },
-  {
     "name": "Installation Guide",
     "path": "readmes/installation/README.md",
     "icon": "⚙️",
