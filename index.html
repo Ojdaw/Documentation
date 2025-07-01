@@ -3,212 +3,433 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Documentation</title>
+<title>Ojdaw Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body {
-    display: flex;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    height: 100vh;
-  }
-  nav {
-    width: 280px;
-    border-right: 1px solid #ccc;
-    padding: 10px;
-    overflow-y: auto;
-    background: #f9f9f9;
-  }
-  #search {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-  .folder {
-    margin-bottom: 1em;
-  }
-  .folder > h3 {
-    margin: 0 0 8px 0;
-    font-size: 1.1em;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 4px;
-  }
-  button.file-btn {
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border: none;
-    width: 100%;
-    text-align: left;
-    padding: 6px 8px;
-    cursor: pointer;
-    margin-bottom: 4px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-  }
-  button.file-btn:hover {
-    background: #ddd;
-  }
-  .file-icon {
-    font-size: 20px;
-    margin-right: 10px;
-    flex-shrink: 0;
-  }
-  main {
-    padding: 20px;
-    overflow-y: auto;
-    flex-grow: 1;
-  }
-  main pre {
-    background: #eee;
-    padding: 10px;
-    border-radius: 4px;
-    overflow-x: auto;
-  }
+    :root {
+        --primary-color: #007bff;
+        --primary-hover-color: #0056b3;
+        --background-light: #f4f7f6;
+        --background-dark: #e0e0e0;
+        --text-color: #333;
+        --border-color: #dcdcdc;
+        --sidebar-bg: #ffffff;
+        --code-bg: #f0f0f0;
+        --code-border: #ccc;
+        --shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+        display: flex;
+        font-family: 'Inter', Arial, sans-serif;
+        margin: 0;
+        height: 100vh;
+        color: var(--text-color);
+        background-color: var(--background-light);
+        overflow: hidden; /* Prevent body scroll, nav and main will scroll */
+    }
+
+    nav {
+        width: 300px;
+        border-right: 1px solid var(--border-color);
+        padding: 15px;
+        overflow-y: auto;
+        background: var(--sidebar-bg);
+        box-shadow: 2px 0 8px var(--shadow);
+        flex-shrink: 0; /* Prevent shrinking */
+    }
+
+    #search {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 15px;
+        font-size: 16px;
+        box-sizing: border-box;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #search:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+
+    .folder {
+        margin-bottom: 1.5em;
+    }
+    .folder > h3 {
+        margin: 0 0 10px 0;
+        font-size: 1.15em;
+        font-weight: 600;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 6px;
+        display: flex;
+        align-items: center;
+    }
+    .folder > h3::before {
+        content: '📁';
+        margin-right: 8px;
+        font-size: 1.2em;
+    }
+
+    button.file-btn, button#home-btn {
+        display: flex;
+        align-items: center;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    button.file-btn:hover, button#home-btn:hover {
+        background: var(--background-dark);
+        color: var(--primary-color);
+    }
+    button.file-btn.active, button#home-btn.active {
+        background: var(--primary-color);
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+    }
+    button.file-btn.active .file-icon, button#home-btn.active .file-icon {
+        filter: brightness(2); /* Make icons white */
+    }
+
+    .file-icon {
+        font-size: 20px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    main {
+        padding: 25px 30px;
+        overflow-y: auto;
+        flex-grow: 1;
+        background-color: var(--background-light);
+    }
+
+    main h1, main h2, main h3, main h4, main h5, main h6 {
+        color: var(--primary-color);
+        margin-top: 1.5em;
+        margin-bottom: 0.8em;
+    }
+
+    main p {
+        line-height: 1.6;
+        margin-bottom: 1em;
+    }
+
+    main pre {
+        background: var(--code-bg);
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        border: 1px solid var(--code-border);
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-size: 0.9em;
+        margin-bottom: 1.5em;
+    }
+
+    main code {
+        background-color: rgba(0, 123, 255, 0.1);
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-size: 0.9em;
+        color: var(--primary-color);
+    }
+
+    main pre code {
+        background: none;
+        padding: 0;
+        color: var(--text-color);
+    }
+
+    /* Initial state for content area */
+    #content.initial-state {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+        color: #666;
+    }
+    #content.initial-state h2 {
+        color: #999;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+    #content.initial-state p {
+        font-size: 1.2em;
+        max-width: 600px;
+        margin: 0 auto;
+    }
 </style>
 </head>
 <body>
 
 <nav>
-  <input type="search" id="search" placeholder="Search files..." />
-  <div id="file-list">
-    <!-- Folders and file buttons will go here -->
-  </div>
+    <input type="search" id="search" placeholder="Search files..." />
+    <button id="home-btn" class="file-btn active">
+        <span class="file-icon">🏠</span>
+        <span>Home</span>
+    </button>
+    <div id="file-list">
+        </div>
 </nav>
 
-<main id="content">
-  <h2>Documentation - Ojdaw</h2>
+<main id="content" class="initial-state">
+    <h2>Welcome to Ojdaw Documentation</h2>
+    <p>Select a file from the left sidebar to view its content, or use the search bar to find specific documentation.</p>
 </main>
 
-<!-- Marked.js for Markdown rendering -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
 const content = document.getElementById('content');
 const fileList = document.getElementById('file-list');
 const searchInput = document.getElementById('search');
+const homeBtn = document.getElementById('home-btn');
 
 let filesData = [];
 const readmeCache = new Map(); // Cache for preloaded markdown text
+let currentActiveFile = null; // To track the currently active file button
+
+// Function to set the active state on file buttons
+function setActiveFileButton(filePath) {
+    // Remove active class from previous button
+    if (currentActiveFile) {
+        currentActiveFile.classList.remove('active');
+    }
+
+    // Add active class to the new button
+    const buttons = document.querySelectorAll('.file-btn');
+    buttons.forEach(btn => {
+        if (btn.dataset.filePath === filePath) {
+            btn.classList.add('active');
+            currentActiveFile = btn;
+        }
+    });
+
+    // Handle home button active state
+    if (filePath === 'home') {
+        homeBtn.classList.add('active');
+    } else {
+        homeBtn.classList.remove('active');
+    }
+}
+
+// Function to handle showing the home content
+function showHomeContent() {
+    content.innerHTML = `
+        <h2>Welcome to Ojdaw Documentation</h2>
+        <p>Select a file from the left sidebar to view its content, or use the search bar to find specific documentation.</p>
+    `;
+    content.classList.add('initial-state');
+    setActiveFileButton('home');
+    // Update URL to reflect home state without a 'path' parameter
+    const url = new URL(window.location.href);
+    url.searchParams.delete('path');
+    window.history.pushState({}, '', url);
+}
+
 
 // Preload all README files at once, cache results
 async function preloadAllReadmes() {
-  const promises = filesData.map(file =>
-    fetch(file.path)
-      .then(res => {
-        if (!res.ok) throw new Error(`File not found: ${file.path}`);
-        return res.text();
-      })
-      .then(text => {
-        readmeCache.set(file.path, text);
-      })
-      // catch removed
-  );
-  await Promise.all(promises);
+    const promises = filesData.map(file =>
+        fetch(file.path)
+            .then(res => {
+                if (!res.ok) throw new Error(`File not found: ${file.path}`);
+                return res.text();
+            })
+            .then(text => {
+                readmeCache.set(file.path, text);
+            })
+            .catch(error => {
+                console.error(`Error preloading ${file.path}:`, error);
+                // Optionally store an error message in cache if preloading failed
+                readmeCache.set(file.path, `Error: Could not load ${file.name}.`);
+            })
+    );
+    await Promise.allSettled(promises); // Use allSettled to wait for all promises, even if some fail
 }
 
 // Load from cache or fetch on demand if missing (fallback)
-function loadReadme(path) {
-  if (readmeCache.has(path)) {
-    content.innerHTML = marked.parse(readmeCache.get(path));
-  } else {
-    fetch(path)
-      .then(res => {
-        if (!res.ok) throw new Error('File not found');
-        return res.text();
-      })
-      .then(md => {
-        readmeCache.set(path, md);
-        content.innerHTML = marked.parse(md);
-      });
-      // catch removed
-  }
+function loadReadme(path, updateUrl = true) {
+    content.classList.remove('initial-state'); // Remove initial state styling
+
+    if (readmeCache.has(path)) {
+        const md = readmeCache.get(path);
+        if (md.startsWith('Error:')) { // Check for preloaded error message
+            content.innerHTML = `<h1>Error Loading Document</h1><p>${md}</p>`;
+        } else {
+            content.innerHTML = marked.parse(md);
+        }
+        setActiveFileButton(path);
+        if (updateUrl) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('path', path);
+            window.history.pushState({}, '', url);
+        }
+    } else {
+        fetch(path)
+            .then(res => {
+                if (!res.ok) throw new Error('File not found');
+                return res.text();
+            })
+            .then(md => {
+                readmeCache.set(path, md);
+                content.innerHTML = marked.parse(md);
+                setActiveFileButton(path);
+                if (updateUrl) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('path', path);
+                    window.history.pushState({}, '', url);
+                }
+            })
+            .catch(error => {
+                console.error(`Error loading ${path}:`, error);
+                content.innerHTML = `<h1>Error</h1><p>Could not load the requested document (${path}). It might not exist or there was a network issue.</p>`;
+                setActiveFileButton(null); // No file is active on error
+                if (updateUrl) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('path'); // Clear path on error
+                    window.history.pushState({}, '', url);
+                }
+            });
+    }
 }
 
 function renderFileList(query = '') {
-  fileList.innerHTML = '';
+    fileList.innerHTML = '';
 
-  const grouped = {};
-  const rootFiles = [];
+    const grouped = {};
+    const rootFiles = [];
 
-  filesData.forEach(file => {
-    const matches = file.name.toLowerCase().includes(query.toLowerCase());
-    const hasFolder = file.folder && file.folder.trim() !== '';
+    filesData.forEach(file => {
+        const matches = file.name.toLowerCase().includes(query.toLowerCase()) ||
+                        (file.folder && file.folder.toLowerCase().includes(query.toLowerCase())); // Search in folder names too!
+        
+        if (!matches) return;
 
-    if (!matches) return;
+        const hasFolder = file.folder && file.folder.trim() !== '';
 
-    if (hasFolder) {
-      if (!grouped[file.folder]) grouped[file.folder] = [];
-      grouped[file.folder].push(file);
-    } else {
-      rootFiles.push(file);
-    }
-  });
-
-  // Render root files (no folder)
-  rootFiles.forEach(file => {
-    const btn = createFileButton(file);
-    fileList.appendChild(btn);
-  });
-
-  // Render folders
-  Object.keys(grouped).sort().forEach(folder => {
-    const filesInFolder = grouped[folder];
-    if (!filesInFolder.length) return;
-
-    const folderDiv = document.createElement('div');
-    folderDiv.className = 'folder';
-
-    const folderTitle = document.createElement('h3');
-    folderTitle.textContent = folder;
-    folderDiv.appendChild(folderTitle);
-
-    filesInFolder.forEach(file => {
-      const btn = createFileButton(file);
-      folderDiv.appendChild(btn);
+        if (hasFolder) {
+            if (!grouped[file.folder]) grouped[file.folder] = [];
+            grouped[file.folder].push(file);
+        } else {
+            rootFiles.push(file);
+        }
     });
 
-    fileList.appendChild(folderDiv);
-  });
+    // Render root files (no folder)
+    rootFiles.forEach(file => {
+        const btn = createFileButton(file);
+        fileList.appendChild(btn);
+    });
+
+    // Render folders
+    Object.keys(grouped).sort().forEach(folder => {
+        const filesInFolder = grouped[folder];
+        if (!filesInFolder.length) return;
+
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'folder';
+
+        const folderTitle = document.createElement('h3');
+        folderTitle.textContent = folder;
+        folderDiv.appendChild(folderTitle);
+
+        filesInFolder.sort((a, b) => a.name.localeCompare(b.name)).forEach(file => { // Sort files within folders
+            const btn = createFileButton(file);
+            folderDiv.appendChild(btn);
+        });
+
+        fileList.appendChild(folderDiv);
+    });
+
+    // After rendering, ensure the currently loaded file button is active
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathFromUrl = urlParams.get('path');
+    if (pathFromUrl && readmeCache.has(pathFromUrl)) {
+        setActiveFileButton(pathFromUrl);
+    } else if (!pathFromUrl) {
+        setActiveFileButton('home');
+    }
 }
 
 function createFileButton(file) {
-  const btn = document.createElement('button');
-  btn.className = 'file-btn';
+    const btn = document.createElement('button');
+    btn.className = 'file-btn';
+    btn.dataset.filePath = file.path; // Store path for active state tracking
 
-  const icon = document.createElement('span');
-  icon.className = 'file-icon';
-  icon.textContent = file.icon || '📄';
-  icon.style.color = file.color || '#000';
+    const icon = document.createElement('span');
+    icon.className = 'file-icon';
+    icon.textContent = file.icon || '📄';
+    icon.style.color = file.color || '#007bff'; // Default icon color
 
-  const name = document.createElement('span');
-  name.textContent = file.name;
+    const name = document.createElement('span');
+    name.textContent = file.name;
 
-  btn.appendChild(icon);
-  btn.appendChild(name);
+    btn.appendChild(icon);
+    btn.appendChild(name);
 
-  btn.addEventListener('click', () => loadReadme(file.path));
-  return btn;
+    btn.addEventListener('click', () => loadReadme(file.path));
+    return btn;
 }
+
+// Event listener for the Home button
+homeBtn.addEventListener('click', showHomeContent);
 
 // Load files.json and preload all readmes on page load
 fetch('files.json')
-  .then(res => {
-    if (!res.ok) throw new Error('Could not load files.json');
-    return res.json();
-  })
-  .then(async data => {
-    filesData = data;
-    renderFileList();
-    await preloadAllReadmes();
-  });
-// catch removed
+    .then(res => {
+        if (!res.ok) throw new Error('Could not load files.json');
+        return res.json();
+    })
+    .then(async data => {
+        filesData = data;
+        renderFileList();
+        await preloadAllReadmes();
+
+        // Check for ?path= parameter on initial load
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathFromUrl = urlParams.get('path');
+        if (pathFromUrl) {
+            loadReadme(pathFromUrl, false); // Load from URL, don't update URL again
+        } else {
+            showHomeContent(); // Show home content if no path is specified
+        }
+    })
+    .catch(error => {
+        console.error("Failed to initialize documentation:", error);
+        content.innerHTML = `<h1>Error Loading Documentation</h1><p>Could not load the documentation index. Please check the 'files.json' file and your network connection.</p>`;
+        content.classList.remove('initial-state');
+    });
 
 searchInput.addEventListener('input', e => {
-  renderFileList(e.target.value);
+    renderFileList(e.target.value);
 });
 
+// Handle browser's back/forward buttons
+window.addEventListener('popstate', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathFromUrl = urlParams.get('path');
+    if (pathFromUrl) {
+        loadReadme(pathFromUrl, false); // Load, but don't push new state
+    } else {
+        showHomeContent();
+    }
+});
 </script>
 
 </body>
